@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!--
+        This file allows you to hook custom targets into the Ciao build lifecycle.
+        You can delete this file if you are not adding customizations.
+    -->
+
+    <!-- Sample: hook a target into the build lifecycle -->
+    <!--
+    <PropertyGroup>
+        <BuildDependsOn>
+            DoSomethingBeforeDefaultBuild;
+            $(BuildDependsOn)
+        </BuildDependsOn>
+    </PropertyGroup>
+
+    <Target Name="DoSomethingBeforeDefaultBuild">
+        ...
+    </Target>
+    -->
+
+    <!-- Sample: override a target -->
+    <!--
+    <Target Name="ResolveNUnitTestAssemblies">
+        <ItemGroup>
+            <NUnitTestAssembly Include="$(SolutionDirectory)**\bin\Debug\*Test*.dll"/>
+        </ItemGroup>
+    </Target>
+    -->
+</Project>

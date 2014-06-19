@@ -1,0 +1,7 @@
+# Auto detect text files and perform LF normalization
+* text=lf
+
+# Custom for Visual Studio
+*.props merge=union
+*.props merge=union
+*.targets merge=union

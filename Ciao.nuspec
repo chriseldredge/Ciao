@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Ciao</id>
+    <version>1.0.0</version>
+    <authors>Chris Eldredge</authors>
+    <owners>The Motley Fool, LLC</owners>
+    <licenseUrl>https://github.com/themotleyfool/Ciao/blob/master/LICENSE.txt</licenseUrl>
+    <projectUrl>https://github.com/themotleyfool/Ciao/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <summary>MSBuild targets for Continuous Integration</summary>
+    <description>
+        Provides targets for building .NET projects from scratch.
+        Ciao bootstraps the build environment by fetching the latest
+        version of the NuGet.exe command-line client, restoring NuGet packages
+        for your solution, injecting version metadata into your assemblies,
+        compiling the solution, running unit tests
+        and building NuGet packages from your nuspecs. See the project URL
+        for information on integrating Ciao with your projects.
+
+        Note: do not install this package into projects. Install it at the Solution
+        level.
+    </description>
+    <releaseNotes>See https://github.com/themotleyfool/Ciao/releases</releaseNotes>
+    <copyright>Copyright 2014 The Motley Fool, LLC</copyright>
+    <tags>msbuild continuous integration</tags>
+  </metadata>
+</package>

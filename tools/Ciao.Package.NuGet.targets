@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <PackageDependsOn>
+            $(PackageDependsOn);
+            NuGetPack
+        </PackageDependsOn>
+        <CleanDependsOn>
+            $(CleanDependsOn);
+            CleanNuGetArtifacts
+        </CleanDependsOn>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Paths">
+        <NuGetPackOutputDirectory Condition=" '$(NuGetPackOutputDirectory)' != '' ">$([System.IO.Path]::Combine('$(ProjectDirectory)', '$(NuGetPackOutputDirectory)'))$([System.IO.Path]::DirectorySeparatorChar)</NuGetPackOutputDirectory>
+        <NuGetPackOutputDirectory Condition=" '$(NuGetPackOutputDirectory)' == '' ">$([System.IO.Path]::Combine('$(BuildDirectory)', 'artifacts'))$([System.IO.Path]::DirectorySeparatorChar)</NuGetPackOutputDirectory>
+    </PropertyGroup>
+
+    <Target Name="NuGetPack" DependsOnTargets="ResolveNuSpecTargets;ResolveNuGetPackConfigurations" Inputs="%(NuSpecTarget.Identity)" Outputs="*none*">
+        <MakeDir Directories="$(NuGetPackOutputDirectory)"/>
+        <ItemGroup>
+            <_RebasedNuSpecTarget
+                Include="$([System.IO.Path]::Combine('$(ProjectDirectory)', '%(NuSpecTarget.Identity)'))"/>
+        </ItemGroup>
+        <Exec
+            Command="$(NuGetCommand) pack &quot;@(_RebasedNuSpecTarget)&quot; -o &quot;$(NuGetPackOutputDirectory).&quot; -Properties &quot;%(NuGetPackConfiguration.Properties)&quot; -Version &quot;%(NuGetPackConfiguration.Version)&quot; -Symbols"/>
+    </Target>
+
+    <Target Name="ResolveNuSpecTargets" Condition=" '@(NuSpecTarget)' == '' ">
+        <ItemGroup>
+            <NuSpec Include="$(ProjectDirectory)**\*.nuspec" Exclude="**\packages\**\*.nuspec"/>
+            <NuSpecProject Include="%(NuSpec.RelativeDir)*.csproj"/>
+            <NuSpec Remove="@(NuSpec)" Condition="%(RelativeDir) != '' and '@(NuSpecProject)' != ''"/>
+            <NuSpecTarget Include="@(NuSpec);@(NuSpecProject)"/>
+        </ItemGroup>
+    </Target>
+
+    <Target Name="ResolveNuGetPackConfigurations" Condition=" '@(NuGetPackConfiguration)' == '' ">
+        <CreateProperty Value="%(CiaoBuildConfiguration.Identity)">
+            <Output TaskParameter="Value" PropertyName="NuGetPackBuildConfiguration"/>
+        </CreateProperty>
+        <CreateItem Include="Default" AdditionalMetadata="Version=$(PackageVersion);Properties=Configuration=$(NuGetPackBuildConfiguration)">
+            <Output TaskParameter="Include" ItemName="NuGetPackConfiguration"/>
+        </CreateItem>
+    </Target>
+
+    <Target Name="CleanNuGetArtifacts">
+        <ItemGroup>
+            <_NuGetPackage Include="$(NuGetPackOutputDirectory)*.nupkg"/>
+        </ItemGroup>
+        <Delete Files="@(_NuGetPackage)"/>
+    </Target>
+</Project>

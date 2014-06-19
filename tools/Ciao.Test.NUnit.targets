@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <NUnitReportFile Condition=" '$(NUnitReportFile)' == '' ">$([System.IO.Path]::Combine('$(BuildDirectory)', 'TestResult.xml'))</NUnitReportFile>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <CleanDependsOn>
+            $(CleanDependsOn);
+            CleanNUnitReport
+        </CleanDependsOn>
+        <TestDependsOn>
+            $(TestDependsOn);
+            NUnit
+        </TestDependsOn>
+    </PropertyGroup>
+
+    <Target Name="NUnit" DependsOnTargets="ResolveNUnitTestAssemblies;RunNunitConsole"/>
+
+    <Target Name="CleanNUnitReport">
+        <Delete Files="$(NUnitReportFile)"/>
+    </Target>
+
+    <Target Name="RunNunitConsole" DependsOnTargets="ResolveNUnitCommand" Inputs="@(_RebasedNUnitTestAssembly)" Outputs="$(NUnitReportFile)">
+        <Exec Command="$(NUnitCommand) @(_RebasedNUnitTestAssembly -> '&quot;%(FullPath)&quot;', ' ') -noshadow &quot;-result=$(NUnitReportFile)&quot;"/>
+    </Target>
+
+    <Target Name="ResolveNUnitTestAssemblies">
+        <ItemGroup>
+            <_RebasedNUnitTestAssembly
+                Condition=" '@(NUnitTestAssembly)' != '' "
+                Include="$([System.IO.Path]::Combine('$(ProjectDirectory)', '%(NUnitTestAssembly.Identity)'))"/>
+            <_RebasedNUnitTestAssembly
+                Condition=" '@(NUnitTestAssembly)' == '' "
+                Include="$(ProjectDirectory)**\bin\**\*Test*.dll"/>
+        </ItemGroup>
+    </Target>
+
+    <Target Name="ResolveNUnitCommand">
+        <ItemGroup Condition=" '$(NUnitConsoleIsOnSystemPath)' != 'true' ">
+            <NUnitRunner Include="$(SolutionPackageDirectory)NUnit.Runners.*\tools\nunit-console.exe"/>
+        </ItemGroup>
+        <!-- TODO: install latest NUnit.Runners when not present -->
+        <CreateProperty Value="%(NUnitRunner.Identity)" Condition=" '$(NUnitConsoleIsOnSystemPath)' != 'true' ">
+            <Output TaskParameter="Value" PropertyName="NUnitRunner"/>
+        </CreateProperty>
+        <CreateProperty Value="nunit-console.exe" Condition=" '$(NUnitConsoleIsOnSystemPath)' == 'true' ">
+            <Output TaskParameter="Value" PropertyName="NUnitRunner"/>
+        </CreateProperty>
+        <Error Text="Unable to locate nunit-console.exe in $(SolutionPackageDirectory) (is NUnit.Runners installed in the Solution?)" Condition=" '$(NUnitRunner)' == '' "/>
+        <PropertyGroup>
+            <NUnitCommand Condition=" '$(OS)' == 'Windows_NT' ">&quot;$(NUnitRunner)&quot;</NUnitCommand>
+            <NUnitCommand Condition=" '$(OS)' != 'Windows_NT' ">mono --runtime=v4.0.30319 &quot;$(NUnitRunner)&quot;</NUnitCommand>
+        </PropertyGroup>
+    </Target>
+</Project>

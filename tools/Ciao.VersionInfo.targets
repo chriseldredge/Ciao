@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <BuildDependsOn>
+            GenerateVersionInfo;
+            $(BuildDependsOn)
+        </BuildDependsOn>
+        <CleanDependsOn>
+            $(CleanDependsOn);
+            CleanVersionInfoFile
+        </CleanDependsOn>
+        <GenerateVersionInfoDependsOn>
+            GenerateVersionInfoCore
+        </GenerateVersionInfoDependsOn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <GeneratedVersionInfoFile Condition=" '$(GeneratedVersionInfoFile)' == '' ">$([System.IO.Path]::Combine('$(BuildDirectory)', 'VersionInfo.cs'))</GeneratedVersionInfoFile>
+        <VersionControlInfo Condition=" '$(VersionControlInfo)' == '' ">(unknown version control revision)</VersionControlInfo>
+        <AssemblyVersion>$(VersionPrefix).$(BuildNumber)</AssemblyVersion>
+        <AssemblyInformationalVersion>$(PackageVersionWithBuildNumber) $(VersionControlInfo)</AssemblyInformationalVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <VersionInfoContent Include="[assembly: global::System.Reflection.AssemblyVersionAttribute(&quot;$(AssemblyVersion)&quot;)]"/>
+        <VersionInfoContent Include="[assembly: global::System.Reflection.AssemblyFileVersionAttribute(&quot;$(AssemblyVersion)&quot;)]"/>
+        <VersionInfoContent Include="[assembly: global::System.Reflection.AssemblyInformationalVersionAttribute(&quot;$(AssemblyInformationalVersion)&quot;)]"/>
+    </ItemGroup>
+
+    <Target Name="CleanVersionInfoFile">
+        <Delete Files="$(GeneratedVersionInfoFile)"/>
+    </Target>
+
+    <Target Name="GenerateVersionInfo" DependsOnTargets="BeforeGenerateVersionInfo;$(GenerateVersionInfoDependsOn);AfterGenerateVersionInfo"/>
+    <Target Name="BeforeGenerateVersionInfo"/>
+    <Target Name="AfterGenerateVersionInfo"/>
+
+    <Target Name="GenerateVersionInfoCore">
+        <MakeDir Directories="$(BuildDirectory)"/>
+        <ReadLinesFromFile File="$(GeneratedVersionInfoFile)" Condition="Exists($(GeneratedVersionInfoFile))">
+            <Output TaskParameter="Lines" ItemName="PreviousVersionInfoContent"/>
+        </ReadLinesFromFile>
+        <WriteLinesToFile File="$(GeneratedVersionInfoFile)" Lines="@(VersionInfoContent)" Overwrite="true"
+            Condition=" '@(VersionInfoContent)' != '@(PreviousVersionInfoContent)' "/>
+        <Message Text="PackageVersion: $(PackageVersion)"/>
+        <Message Text="AssemblyVersion: $(AssemblyVersion)"/>
+        <Message Text="AssemblyInformationalVersion: $(AssemblyInformationalVersion)"/>
+        <Message Text="Assembly Version attributes written to $(GeneratedVersionInfoFile)"/>
+    </Target>
+</Project>
