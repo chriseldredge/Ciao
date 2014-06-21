@@ -15,7 +15,7 @@
         </TestDependsOn>
     </PropertyGroup>
 
-    <Target Name="NUnit" DependsOnTargets="ResolveNUnitTestAssemblies;RunNunitConsole"/>
+    <Target Name="NUnit" DependsOnTargets="ResolveNUnitTestAssemblies;RebaseNUnitTestAssemblies;RunNunitConsole"/>
 
     <Target Name="CleanNUnitReport">
         <Delete Files="$(NUnitReportFile)"/>
@@ -25,15 +25,25 @@
         <Exec Command="$(NUnitCommand) @(_RebasedNUnitTestAssembly -> '&quot;%(FullPath)&quot;', ' ') -noshadow &quot;-result=$(NUnitReportFile)&quot;"/>
     </Target>
 
-    <Target Name="ResolveNUnitTestAssemblies">
-        <ItemGroup>
-            <_RebasedNUnitTestAssembly
-                Condition=" '@(NUnitTestAssembly)' != '' "
-                Include="$([System.IO.Path]::Combine('$(ProjectDirectory)', '%(NUnitTestAssembly.Identity)'))"/>
-            <_RebasedNUnitTestAssembly
-                Condition=" '@(NUnitTestAssembly)' == '' "
-                Include="$(ProjectDirectory)**\bin\**\*Test*.dll"/>
-        </ItemGroup>
+    <Target Name="ResolveNUnitTestAssemblies" Condition=" '@(NUnitTestAssembly)' == ''">
+        <CreateItem Include="$(ProjectDirectory)**\bin\**\*Test*.dll">
+            <Output TaskParameter="Include" ItemName="_NunitTestAssembly"/>
+        </CreateItem>
+        <CreateItem Include="%(_NUnitTestAssembly.Identity)">
+            <Output TaskParameter="Include" ItemName="NunitTestAssembly"/>
+        </CreateItem>
+    </Target>
+
+    <Target Name="RebaseNUnitTestAssemblies" Inputs="%(NUnitTestAssembly.Identity)" Outputs="*none*">
+        <CreateProperty Value="@(NUnitTestAssembly)">
+            <Output TaskParameter="Value" PropertyName="_CurrentNUnitTestAssembly"/>
+        </CreateProperty>
+        <PropertyGroup>
+            <_CurrentNUnitTestAssemblyRebased>$([System.IO.Path]::Combine('$(ProjectDirectory)', '$(_CurrentNUnitTestAssembly)'))</_CurrentNUnitTestAssemblyRebased>
+        </PropertyGroup>
+        <CreateItem Include="$(_CurrentNUnitTestAssemblyRebased)">
+            <Output TaskParameter="Include" ItemName="_RebasedNUnitTestAssembly"/>
+        </CreateItem>
     </Target>
 
     <Target Name="ResolveNUnitCommand">

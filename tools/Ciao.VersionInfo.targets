@@ -37,7 +37,7 @@
 
     <Target Name="GenerateVersionInfoCore">
         <MakeDir Directories="$(BuildDirectory)"/>
-        <ReadLinesFromFile File="$(GeneratedVersionInfoFile)" Condition="Exists($(GeneratedVersionInfoFile))">
+        <ReadLinesFromFile File="$(GeneratedVersionInfoFile)" Condition="Exists('$(GeneratedVersionInfoFile)')">
             <Output TaskParameter="Lines" ItemName="PreviousVersionInfoContent"/>
         </ReadLinesFromFile>
         <WriteLinesToFile File="$(GeneratedVersionInfoFile)" Lines="@(VersionInfoContent)" Overwrite="true"

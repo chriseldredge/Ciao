@@ -14,7 +14,7 @@
 
         <ToolsDirectory Condition=" '$(ToolsDirectory)' != '' ">$([System.IO.Path]::Combine('$(ProjectDirectory)', '$(ToolsDirectory)'))$([System.IO.Path]::DirectorySeparatorChar)</ToolsDirectory>
         <ToolsDirectory Condition=" '$(ToolsDirectory)' == '' ">$([System.IO.Path]::Combine('$(BuildDirectory)', 'tools'))$([System.IO.Path]::DirectorySeparatorChar)</ToolsDirectory>
-        <NuGetExePath Condition=" '$(NuGetExePath)' == '' ">$([System.IO.Path]::Combine('$(NuGetToolsPath)', 'NuGet.exe'))</NuGetExePath>
+        <NuGetExePath Condition=" '$(NuGetExePath)' == '' ">$([System.IO.Path]::Combine('$(ToolsDirectory)', 'NuGet.exe'))</NuGetExePath>
 
         <NuGetCommand Condition=" '$(OS)' == 'Windows_NT' ">"$(NuGetExePath)"</NuGetCommand>
         <NuGetCommand Condition=" '$(OS)' != 'Windows_NT' ">mono --runtime=v4.0.30319 $(NuGetExePath)</NuGetCommand>
@@ -84,8 +84,7 @@
     </Target>
 
     <Target Name="CompileClean">
-        <MSBuild Projects="$(SolutionFile)" Targets="Clean" Properties="Configuration=Debug"/>
-        <MSBuild Projects="$(SolutionFile)" Targets="Clean" Properties="Configuration=Release"/>
+        <MSBuild Projects="$(SolutionFile)" Targets="Clean" Properties="Configuration=%(CiaoBuildConfiguration.Identity)" />
     </Target>
 
     <Import Project="$(ProjectDirectory)/Ciao.targets" Condition="Exists('$(ProjectDirectory)/Ciao.targets')"/>

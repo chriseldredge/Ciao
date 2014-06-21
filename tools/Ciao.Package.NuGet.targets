@@ -18,21 +18,32 @@
 
     <Target Name="NuGetPack" DependsOnTargets="ResolveNuSpecTargets;ResolveNuGetPackConfigurations" Inputs="%(NuSpecTarget.Identity)" Outputs="*none*">
         <MakeDir Directories="$(NuGetPackOutputDirectory)"/>
-        <ItemGroup>
-            <_RebasedNuSpecTarget
-                Include="$([System.IO.Path]::Combine('$(ProjectDirectory)', '%(NuSpecTarget.Identity)'))"/>
-        </ItemGroup>
+        <CreateProperty Value="%(NuSpecTarget.Identity)">
+            <Output TaskParameter="Value" PropertyName="_CurrentNuSpecTarget"/>
+        </CreateProperty>
+        <PropertyGroup>
+            <_CurrentNuSpecTargetRebased>$([System.IO.Path]::Combine('$(ProjectDirectory)', '$(_CurrentNuSpecTarget)'))</_CurrentNuSpecTargetRebased>
+        </PropertyGroup>
         <Exec
-            Command="$(NuGetCommand) pack &quot;@(_RebasedNuSpecTarget)&quot; -o &quot;$(NuGetPackOutputDirectory).&quot; -Properties &quot;%(NuGetPackConfiguration.Properties)&quot; -Version &quot;%(NuGetPackConfiguration.Version)&quot; -Symbols"/>
+            Command="$(NuGetCommand) pack &quot;$(_CurrentNuSpecTargetRebased)&quot; -o &quot;$(NuGetPackOutputDirectory).&quot; -Properties &quot;%(NuGetPackConfiguration.Properties)&quot; -Version &quot;%(NuGetPackConfiguration.Version)&quot; -Symbols"/>
     </Target>
 
     <Target Name="ResolveNuSpecTargets" Condition=" '@(NuSpecTarget)' == '' ">
         <ItemGroup>
-            <NuSpec Include="$(ProjectDirectory)**\*.nuspec" Exclude="**\packages\**\*.nuspec"/>
-            <NuSpecProject Include="%(NuSpec.RelativeDir)*.csproj"/>
-            <NuSpec Remove="@(NuSpec)" Condition="%(RelativeDir) != '' and '@(NuSpecProject)' != ''"/>
-            <NuSpecTarget Include="@(NuSpec);@(NuSpecProject)"/>
+            <NuSpec Include="$(ProjectDirectory)**\*.nuspec" Exclude="$(SolutionPackageDirectory)\**\*.nuspec"/>
         </ItemGroup>
+        <CreateItem Include="%(NuSpec.RelativeDir)*.csproj">
+            <Output TaskParameter="Include" ItemName="NuSpecProject"/>
+        </CreateItem>
+        <CreateItem Include="@(NuSpec)" Condition="%(RelativeDir) != '' and '@(NuSpecProject)' != '' ">
+            <Output TaskParameter="Include" ItemName="NuSpecToRemove"/>
+        </CreateItem>
+        <ItemGroup>
+            <NuSpec Remove="@(NuSpecToRemove)"/>
+            <NuSpecTarget Include="%(NuSpec.Identity)"/>
+            <NuSpecTarget Include="%(NuSpecProject.Identity)"/>
+        </ItemGroup>
+        <Message Text="NuGet pack targets: %(NuSpecTarget.Identity)"/>
     </Target>
 
     <Target Name="ResolveNuGetPackConfigurations" Condition=" '@(NuGetPackConfiguration)' == '' ">
