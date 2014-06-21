@@ -4,8 +4,6 @@ $solution = Get-Interface $dte.Solution ([EnvDTE80.Solution2])
 $solutionFile = (Get-Item $solution.FileName)
 $solutionDir = $solutionFile.Directory
 
-Write-Host Installing Ciao templates from $toolsPath to $solutionDir
-
 $propsPath = Join-Path $solutionDir "Ciao.props"
 
 if (-Not(Test-Path $propsPath)) {
@@ -22,9 +20,9 @@ if ($folder -eq $null) {
     $folder = $solution.AddSolutionFolder("Ciao")
 }
 
-$folder.ProjectItems.AddFromFile((Join-Path $solutionDir "Ciao.proj"))
-$folder.ProjectItems.AddFromFile((Join-Path $solutionDir "Ciao.props"))
+$folder.ProjectItems.AddFromFile((Join-Path $solutionDir "Ciao.proj")) | Out-Null
+$folder.ProjectItems.AddFromFile((Join-Path $solutionDir "Ciao.props")) | Out-Null
 
 if (Test-Path (Join-Path $solutionDir "Ciao.targets")) {
-    $folder.ProjectItems.AddFromFile((Join-Path $solutionDir "Ciao.targets"))
+    $folder.ProjectItems.AddFromFile((Join-Path $solutionDir "Ciao.targets")) | Out-Null
 }

@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Ciao</id>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <authors>Chris Eldredge</authors>
     <owners>The Motley Fool, LLC</owners>
     <licenseUrl>https://github.com/themotleyfool/Ciao/blob/master/LICENSE.txt</licenseUrl>
