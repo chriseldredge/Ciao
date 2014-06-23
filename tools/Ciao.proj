@@ -84,7 +84,7 @@
     </Target>
 
     <Target Name="CompileClean">
-        <MSBuild Projects="$(SolutionFile)" Targets="Clean" Properties="Configuration=%(CiaoBuildConfiguration.Identity)" />
+        <MSBuild Projects="@(CiaoCompileTarget)" Targets="Clean" Properties="Configuration=%(CiaoBuildConfiguration.Identity)" />
     </Target>
 
     <Import Project="$(ProjectDirectory)/Ciao.targets" Condition="Exists('$(ProjectDirectory)/Ciao.targets')"/>
