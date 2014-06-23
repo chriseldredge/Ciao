@@ -98,7 +98,7 @@ Ciao.props as in this example:
 
 #### Setting Properties and Package Version
 
-By default Ciao will run `NuGet.exe pack` using the last `CiaoBuildConfiguration` (see [Build Configurations](#Build-Configurations)) and the version as defined in the `PackageVersion`
+By default Ciao will run `NuGet.exe pack` using the last `CiaoBuildConfiguration` (see [Build Configurations](#build-configurations)) and the version as defined in the `PackageVersion`
 property.
 
 You can control which build configuration(s), and version(s) are built, and add your own
