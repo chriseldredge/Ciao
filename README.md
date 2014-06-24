@@ -12,7 +12,7 @@ To install Ciao, run the following command in the Package Manager Console
 PM> Install-Package Ciao
 ```
 
-# But Why
+## But Why
 
 Modern CI servers have lots of smarts and can already do most of what Ciao does, so why use Ciao?
 
@@ -30,9 +30,19 @@ the build.
 
 Ciao lets you integrate locally and gives you confidence that you'll get a similar result when you push.
 
+## Why not Fake?
+
+[Fake](http://fsharp.github.io/FAKE/) is a cross-platform build tool that also performs automated, integrated
+builds. It's pretty cool and you should check it out. Ciao is an alternative that is 100% MSBuild. Ciao gives
+you conventions and defaults for common tasks (compiling, running tests, packaging) that you'll have to write
+yourself with Fake.
+
+Pick what's right for you!
+
 ## Files
 
 When you install Ciao, 3 files are installed next to your `.sln` file: Ciao.proj, Ciao.props, and Ciao.targets.
+You should commit these files to version control.
 
 ### Ciao.proj (required)
 
@@ -54,9 +64,45 @@ not be restored when you upgrade to a new version of Ciao.
 
 If you decide you need this file later, you can manually copy the sample from `packages\Ciao.<version>\tools\templates\Ciao.targets`.
 
+## Build Version
+
+Ciao uses 3 properties to build a version string used for injecting assembly attributes and when
+running `NuGet.exe pack`:
+
+Property      | Default | Description
+--------      | ------- | -----------
+VersionPrefix | 1.0.0   | [SemVer](http://semver.org/) compliant version excluding pre-release and build metadata
+VersionSuffix |         | A pre-release label such as `alpha` (excluding hyphen)
+BuildNumber   | 0       | An integer indicating the build number, generally defined by CI
+
+These properties are combined to define 2 additional properties. Supposing VersionPrefix=2.9.3 and
+VersionSuffix=preview and BuildNumber=123:
+
+Property      | Default
+--------      | -------
+PackageVersion| 2.9.3-preview
+PackageVersionWithBuildNumber| 2.9.3-preview-build123
+
+If you would like to let your CI server specify VersionPrefix, remove the property from
+your Ciao.props.
+
+See the secion on [Injecting Version Metadata](#injecting-version-metadata) to see how to
+set the version on your compiled assemblies using these properties.
+
 ## Build Configurations
 
-## Build Version
+By default Ciao will compile your solution first in Debug then in Release configuration.
+You can override the default by adding an ItemGroup to your Ciao.props:
+
+```xml
+<ItemGroup>
+  <CiaoBuildConfiguration Include="Release"/>
+  <CiaoBuildConfiguration Include="OtherWeirdConfiguration"/>
+</ItemGroup>
+```
+
+You can also override the target `ResolveCompileConfigurations` to do this dynamically in your
+Ciao.targets.
 
 ## NuGet
 
@@ -133,6 +179,10 @@ NuGet.exe pack foo\bar.nuspec -Properties Configuration=Release;PackageVersion=1
 
 Using these `NuGetPackConfiguration` items allows you to build your packages in multiple configurations
 to allow debug/prerelease and release packages easily.
+
+## Injecting Version Metadata
+
+(TODO)
 
 ## Supported CI Systems
 
