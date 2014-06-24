@@ -78,8 +78,8 @@ BuildNumber   | 0       | An integer indicating the build number, generally defi
 These properties are combined to define 2 additional properties. Supposing VersionPrefix=2.9.3 and
 VersionSuffix=preview and BuildNumber=123:
 
-Property      | Default
---------      | -------
+Property      | Value
+--------      | -----
 PackageVersion| 2.9.3-preview
 PackageVersionWithBuildNumber| 2.9.3-preview-build123
 
@@ -165,7 +165,7 @@ properties, by either overriding the `ResolveNuGetPackConfigurations` target or 
 
 The above example will run `NuGet.exe pack` on each target with two different configurations.
 
-The first (named Prerelease) will will invoke e.g.
+The first (named Prerelease) will invoke e.g.
 
 ```
 NuGet.exe pack foo\bar.nuspec -Properties Configuration=Debug;PackageVersion=1.0.0-build37 -Version 1.0.0-build37
