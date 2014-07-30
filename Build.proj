@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <BuildDirectory>$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', 'build'))$([System.IO.Path]::DirectorySeparatorChar)</BuildDirectory>
+        <ToolsDirectory>$([System.IO.Path]::Combine('$(BuildDirectory)', 'tools'))$([System.IO.Path]::DirectorySeparatorChar)</ToolsDirectory>
+        <StagingDirectory>$([System.IO.Path]::Combine('$(BuildDirectory)', 'stage'))$([System.IO.Path]::DirectorySeparatorChar)</StagingDirectory>
+        <ArtifactDirectory>$([System.IO.Path]::Combine('$(BuildDirectory)', 'artifacts'))$([System.IO.Path]::DirectorySeparatorChar)</ArtifactDirectory>
+        <NuGetExePath>$([System.IO.Path]::Combine('$(ToolsDirectory)', 'NuGet.exe'))</NuGetExePath>
+
+        <NuGetCommand Condition=" '$(OS)' == 'Windows_NT' ">"$(NuGetExePath)"</NuGetCommand>
+        <NuGetCommand Condition=" '$(OS)' != 'Windows_NT' ">mono --runtime=v4.0.30319 $(NuGetExePath)</NuGetCommand>
+        <NuGetClientDownloadUrl>https://www.nuget.org/nuget.exe</NuGetClientDownloadUrl>
+
+        <SubstitutionFile>tools\templates\Ciao.proj</SubstitutionFile>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <BuildDependsOn>
+            DownloadNuGetCommandLineClient;
+            StagePackageContents;
+            NuPack
+        </BuildDependsOn>
+    </PropertyGroup>
+
+    <Target Name="Rebuild" DependsOnTargets="Clean;Build"/>
+
+    <Target Name="Build" DependsOnTargets="$(BuildDependsOn)"/>
+
+    <Target Name="Clean">
+        <Exec Command="rd /s /q &quot;$(StagingDirectory)&quot; &quot;$(ArtifactDirectory)&quot;"/>
+    </Target>
+
+    <Target Name="StagePackageContents" DependsOnTargets="CopyPackageContents;SubstituteVariables"/>
+
+    <Target Name="CopyPackageContents">
+        <MakeDir Directories="$(StagingDirectory)"/>
+        <ItemGroup>
+            <ToolFile Include="tools\**\*" Exclude="$(SubstitutionFile)"/>
+        </ItemGroup>
+        <Copy SourceFiles="Ciao.nuspec" DestinationFolder="$(StagingDirectory)" SkipUnchangedFiles="True"/>
+        <Copy SourceFiles="@(ToolFile)" DestinationFolder="$(StagingDirectory)tools\%(RecursiveDir)" SkipUnchangedFiles="True"/>
+    </Target>
+
+    <Target Name="SubstituteVariables" Inputs="Ciao.nuspec;$(SubstitutionFile)" Outputs="$(StagingDirectory)$(SubstitutionFile)">
+        <XPathSelectSingleNode File="Ciao.nuspec" XPath="//version/text()">
+            <Output TaskParameter="Value" PropertyName="_NuspecVersion"/>
+        </XPathSelectSingleNode>
+        <Message Text="Version $(_NuspecVersion)"/>
+        <ReplaceFileText
+            SourceFile="$(SubstitutionFile)"
+            DestinationFile="$(StagingDirectory)$(SubstitutionFile)"
+            MatchExpression="&lt;CiaoVersion&gt;.*&lt;/CiaoVersion&gt;"
+            ReplacementText="&lt;CiaoVersion&gt;$(_NuspecVersion)&lt;/CiaoVersion&gt;"/>
+    </Target>
+
+    <Target Name="NuPack">
+        <MakeDir Directories="$(ArtifactDirectory)"/>
+        <Exec Command="$(NuGetCommand) pack -o &quot;$(ArtifactDirectory.Trim('$([System.IO.Path]::DirectorySeparatorChar)'))&quot;" WorkingDirectory="$(StagingDirectory)"/>
+    </Target>
+
+    <Target Name="DownloadNuGetCommandLineClient" Condition="!Exists('$(NuGetExePath)')">
+        <MakeDir Directories="$(ToolsDirectory)"/>
+        <Message Text="Downloading $(NuGetClientDownloadUrl) to $(NuGetExePath)"/>
+        <DownloadNuGet OutputFilename="$(NuGetExePath)" Url="$(NuGetClientDownloadUrl)" Condition=" '$(OS)' == 'Windows_NT' "/>
+        <Exec Command="curl -L -o &quot;$(NuGetExePath)&quot; $(NuGetClientDownloadUrl)" Condition=" '$(OS)' != 'Windows_NT' "/>
+    </Target>
+
+    <UsingTask TaskName="DownloadNuGet" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+        <ParameterGroup>
+            <Url ParameterType="System.String" Required="true" />
+            <OutputFilename ParameterType="System.String" Required="true" />
+        </ParameterGroup>
+        <Task>
+            <Reference Include="System.Core" />
+            <Using Namespace="System" />
+            <Using Namespace="System.IO" />
+            <Using Namespace="System.Net" />
+            <Using Namespace="Microsoft.Build.Framework" />
+            <Using Namespace="Microsoft.Build.Utilities" />
+            <Code Type="Fragment" Language="cs">
+                <![CDATA[
+                try {
+                    OutputFilename = Path.GetFullPath(OutputFilename);
+
+                    WebClient webClient = new WebClient();
+                    webClient.DownloadFile(Url, OutputFilename);
+
+                    return true;
+                }
+                catch (Exception ex) {
+                    Log.LogErrorFromException(ex);
+                    return false;
+                }
+            ]]>
+            </Code>
+        </Task>
+    </UsingTask>
+
+    <UsingTask TaskName="ReplaceFileText" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+        <ParameterGroup>
+            <SourceFile ParameterType="System.String" Required="true" />
+            <DestinationFile ParameterType="System.String" Required="true" />
+            <MatchExpression ParameterType="System.String" Required="true" />
+            <ReplacementText ParameterType="System.String" Required="true" />
+        </ParameterGroup>
+        <Task>
+            <Reference Include="System.Core" />
+            <Using Namespace="System" />
+            <Using Namespace="System.IO" />
+            <Using Namespace="System.Text.RegularExpressions" />
+            <Code Type="Fragment" Language="cs">
+                <![CDATA[
+                    File.WriteAllText(
+                    DestinationFile,
+                    Regex.Replace(File.ReadAllText(SourceFile), MatchExpression, ReplacementText)
+                    );
+                ]]>
+                </Code>
+        </Task>
+    </UsingTask>
+
+    <UsingTask TaskName="XPathSelectSingleNode" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+        <ParameterGroup>
+            <File ParameterType="System.String" Required="true" />
+            <XPath ParameterType="System.String" Required="true" />
+            <Value ParameterType="System.String" Output="true" />
+        </ParameterGroup>
+        <Task>
+            <Reference Include="System.Core" />
+            <Reference Include="System.Xml" />
+            <Reference Include="System.Xml.Linq" />
+            <Using Namespace="System" />
+            <Using Namespace="System.Xml" />
+            <Using Namespace="System.Xml.Linq" />
+            <Using Namespace="System.Xml.XPath" />
+            <Code Type="Fragment" Language="cs">
+                <![CDATA[
+                    var doc = XDocument.Load(File);
+                    var result = (IEnumerable)doc.XPathEvaluate(XPath);
+                    Value = result.Cast<XNode>().SingleOrDefault().ToString();
+                ]]>
+                </Code>
+        </Task>
+    </UsingTask>
+</Project>

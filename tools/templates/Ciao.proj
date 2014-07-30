@@ -9,6 +9,7 @@
     <Import Project="Ciao.props" Condition="Exists('Ciao.props')"/>
 
     <PropertyGroup>
+        <CiaoVersion><!-- injected by Build.proj --></CiaoVersion>
         <BuildDirectory Condition=" '$(BuildDirectory)' == '' ">$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', 'build'))$([System.IO.Path]::DirectorySeparatorChar)</BuildDirectory>
         <ToolsDirectory Condition=" '$(ToolsDirectory)' == '' ">$([System.IO.Path]::Combine('$(BuildDirectory)', 'tools'))$([System.IO.Path]::DirectorySeparatorChar)</ToolsDirectory>
         <NuGetExePath Condition=" '$(NuGetExePath)' == '' ">$([System.IO.Path]::Combine('$(ToolsDirectory)', 'NuGet.exe'))</NuGetExePath>
