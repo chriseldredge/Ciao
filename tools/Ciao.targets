@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" InitialTargets="Validate" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildThisFileDirectory)/Ciao.Defaults.props"/>
+    <Import Project="$(ProjectDirectory)Ciao.props" Condition=" '$(ImportCiaoProperties)' == 'True' and Exists('$(ProjectDirectory)Ciao.props')"/>
     <Import Project="$(MSBuildThisFileDirectory)/Ciao.AppVeyor.props"/>
-    <Import Project="$(ProjectDirectory)/Ciao.props" Condition="Exists('$(ProjectDirectory)Ciao.props')"/>
 
     <PropertyGroup Label="Paths">
         <BuildDirectory Condition=" '$(BuildDirectory)' != '' ">$([System.IO.Path]::Combine('$(ProjectDirectory)', '$(BuildDirectory)'))$([System.IO.Path]::DirectorySeparatorChar)</BuildDirectory>
         <BuildDirectory Condition=" '$(BuildDirectory)' == '' ">$([System.IO.Path]::Combine('$(ProjectDirectory)', 'build'))$([System.IO.Path]::DirectorySeparatorChar)</BuildDirectory>
 
-        <SolutionFile>$([System.IO.Path]::Combine('$(ProjectDirectory)', '$(SolutionFile)'))</SolutionFile>
+        <SolutionFile Condition=" '$(SolutionFile)' != '' ">$([System.IO.Path]::Combine('$(ProjectDirectory)', '$(SolutionFile)'))</SolutionFile>
         <SolutionDirectory Condition="Exists('$(SolutionFile)')">$([System.IO.Path]::GetDirectoryName('$(SolutionFile)'))$([System.IO.Path]::DirectorySeparatorChar)</SolutionDirectory>
         <SolutionPackageDirectory Condition="Exists('$(SolutionDirectory)')">$([System.IO.Path]::Combine('$(SolutionDirectory)', 'packages'))$([System.IO.Path]::DirectorySeparatorChar)</SolutionPackageDirectory>
 
@@ -35,6 +34,8 @@
             Package
         </BuildDependsOn>
         <CleanDependsOn>
+            ResolveCompileTargets;
+            ResolveCompileConfigurations;
             CompileClean
         </CleanDependsOn>
         <TestDependsOn/>
